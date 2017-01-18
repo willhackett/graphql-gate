@@ -11,6 +11,14 @@ const mapObj = (o, f, ctx) => {
   return result
 }
 
+/**
+ * Check if a variable is an object with keys
+ */
+const isObjectWithKeys = value => {
+  return typeof value === 'object' && Object.keys(value).length > 0
+}
+
 export {
-  mapObj
+  mapObj,
+  isObjectWithKeys
 }

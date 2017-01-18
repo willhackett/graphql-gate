@@ -1,0 +1,36 @@
+{
+  "name": "twobyfour",
+  "version": "1.0.0",
+  "description": "graphql wrapper for validation and permissions with db agnostic bridge",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OpenClubDev/twobyfour.git"
+  },
+  "keywords": [
+    "graphql",
+    "validation",
+    "permissions",
+    "db",
+    "mongo",
+    "dynamodb",
+    "lambda"
+  ],
+  "author": "Matt Way",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/OpenClubDev/twobyfour/issues"
+  },
+  "homepage": "https://github.com/OpenClubDev/twobyfour#readme",
+  "devDependencies": {
+    "babel-core": "^6.21.0",
+    "babel-loader": "^6.2.10",
+    "babel-plugin-transform-object-rest-spread": "^6.20.2",
+    "babel-preset-latest": "^6.16.0",
+    "webpack": "^1.14.0",
+    "webpack-node-externals": "^1.5.4"
+  }
+}

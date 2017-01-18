@@ -24,28 +24,18 @@ const clearCache = () => resourceCache = {}
  * Get a resource from the DB
  * The params provided match graphql's param object layout and context
  */
-const getResource = (table, params, context) => {
-  // convert the params to dynamo params
-  const _params = {
-    Key: params,
-    TableName: table
-  }
-
-  return docClient.get(_params).promise()
+const getResource = (params, context) => {
+  return docClient.get(params).promise().then(result => {
+    return result.Item ? result.Item : Promise.reject(new Error('(getResource): Resource could not be found'))
+  })
 }
 
 /**
  * Put a resource in the DB
  * The params given match graphql's param object layout and context
  */
-const putResource = (table, params, context) => {
-  // convert to dynamo params
-  const _params = {
-    //Item: ...,
-    TableName: table
-  }
-
-  return docClient.put(_params).promise()
+const putResource = (params, context) => {
+  return docClient.put(params).promise()
 }
 
 /**
@@ -66,5 +56,6 @@ const deleteResource = (table, params, context) => {
 
 export default {
   setDoc,
-  getResource
+  getResource,
+  putResource
 }

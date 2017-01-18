@@ -5,7 +5,7 @@ import {
   GraphQLNonNull,
   GraphQLList
 } from 'graphql'
-import { mapObj } from './utils'
+import { mapObj, isObjectWithKeys } from './utils'
 
 /**
  * Primary entry function into twobyfour. Expects a twobyfour schema,
@@ -25,7 +25,7 @@ const twobyfour = config => {
   }
 
   // parse mutations if available
-  if(config.mutations && Object.keys(config.mutations) > 0){
+  if(config.mutations && Object.keys(config.mutations).length > 0){
     schema.mutation = new GraphQLObjectType({
       name: 'Mutation',
       fields: mapObj(config.mutations, parseRoot)
@@ -77,7 +77,7 @@ const parseField = config => {
     return parseList(type)
   }
 
-  const newType = fields ? parseType(type) : type.graphql
+  const newType = fields ? parseType(config) : type.graphql
   return Object.assign({}, config, {
     type: required ? new GraphQLNonNull(newType) : newType
   })
@@ -87,13 +87,13 @@ const parseField = config => {
  * Validate a single value with an optional set of promise returning
  * validation functions
  */
-const validateField = (value, validators = [], context) => {
+const validateField = (key, value, validators = [], context) => {
   if(Array.isArray(validators)){
     // run the individual validators sequentially to ensure context caching works
-    return validators.reduce((p, v) => p.then(() => v(value, context)), Promise.resolve())
+    return validators.reduce((p, v) => p.then(() => v(key, value, context)), Promise.resolve())
   }
   // single validator
-  return validators(value, context)
+  return validators(key, value, context)
 }
 
 /**
@@ -101,9 +101,20 @@ const validateField = (value, validators = [], context) => {
  * definitions (which contain optional validator functions)
  */
 const validateFields = (values, defs, context) => {
-  // validate each arg in seuqential order to utilise context caching correctly
+  // validate each arg in sequential order to utilise context caching correctly
   return Object.keys(values).reduce((p, key) =>
-    p.then(() => validateField(values[key], defs[key].validation, context)),
+    p.then(() => {
+      const val = values[key]
+      const itemValidated = validateField(key, values[key], defs[key].validators, context)
+      
+      // TODO: add support for array arg types
+
+      // deal with nested arg types
+      if(isObjectWithKeys(val)){
+        return itemValidated.then(() => validateFields(val, defs[key].fields))
+      }
+      return itemValidated
+    }),
   Promise.resolve())
 }
 
@@ -115,7 +126,7 @@ const validateFields = (values, defs, context) => {
 const parseRoot = config => ({
   type: parseType(config.type),
   args: mapObj(config.args || {}, parseField),
-  resolve: (root, params, context) =>
+  resolve: (root, params, context) => 
     validateFields(params, config.args, context)
     .then(() => config.resolve(root, params, context))
 })
