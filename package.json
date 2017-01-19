@@ -4,7 +4,7 @@
   "description": "graphql wrapper for making validation, generation and permissions easier",
   "main": "lib/index.js",
   "scripts": {
-    "build": "webpack --config webpack.config.babel.js",
+    "build": "./node_modules/.bin/babel --presets latest -d lib/ src/",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/OpenClubDev/twobyfour#readme",
   "devDependencies": {
+    "babel-cli": "^6.18.0",
     "babel-core": "^6.21.0",
     "babel-loader": "^6.2.10",
     "babel-plugin-transform-object-rest-spread": "^6.20.2",
