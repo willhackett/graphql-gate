@@ -1,9 +1,10 @@
 {
   "name": "twobyfour",
   "version": "1.0.0",
-  "description": "graphql wrapper for validation and permissions with db agnostic bridge",
-  "main": "index.js",
+  "description": "graphql wrapper for making validation, generation and permissions easier",
+  "main": "lib/index.js",
   "scripts": {
+    "build": "webpack --config webpack.config.babel.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -32,5 +33,8 @@
     "babel-preset-latest": "^6.16.0",
     "webpack": "^1.14.0",
     "webpack-node-externals": "^1.5.4"
+  },
+  "dependencies": {
+    "graphql": "^0.8.2"
   }
 }
