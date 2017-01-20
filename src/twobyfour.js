@@ -126,7 +126,7 @@ const functorFields = (name, values, defs, context, info) => {
 
     // deal with nested value types (TODO: this might belong in functorField())
     if(isObjectWithKeys(val)){
-      return functorRan.then(() => functorFields(name, val, defs[key].fields, context, info))
+      return functorRan.then(() => functorFields(name, val, defs[key].type.fields, context, info))
     }
     return functorRan
   })
