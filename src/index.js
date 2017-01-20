@@ -1,9 +1,10 @@
 
-import twobyfour from './twobyfour'
+import twobyfour, { defaultConfig } from './twobyfour'
 import Types from './types'
 
 export {
-  Types
+  Types,
+  defaultConfig
 }
 
 export default twobyfour

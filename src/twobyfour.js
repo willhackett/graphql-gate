@@ -129,8 +129,8 @@ const functorFields = (name, values, defs, context, info) => {
         return functorRan.then(() => functorFields(name, val, defs[key].fields, context, info))
       }
       return functorRan
-    })
-  ), Promise.resolve())
+    }), 
+  Promise.resolve())
 }
 
 /**
@@ -142,8 +142,8 @@ const runGenerators = (values, defs, context, info) => {
       if(defs[key].generator){
         values[key] = defs[key].generator(values, context, info)
       }
-    })
-  ), Promise.resolve())
+    }),
+  Promise.resolve())
 }
 
 /**
