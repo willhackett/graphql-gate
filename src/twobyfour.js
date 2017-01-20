@@ -4,7 +4,7 @@ import {
   GraphQLInputObjectType,
   GraphQLNonNull,
   GraphQLList
-} from '/Users/mattway/repos/openclub-graphql/node_modules/graphql'
+} from 'graphql'
 import { mapObj, isObjectWithKeys, pChain } from './utils'
 
 /**

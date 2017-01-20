@@ -1,4 +1,4 @@
-import { GraphQLScalarType } from '/Users/mattway/repos/openclub-graphql/node_modules/graphql'
+import { GraphQLScalarType } from 'graphql'
 
 export default new GraphQLScalarType({
   name: 'DateTime',

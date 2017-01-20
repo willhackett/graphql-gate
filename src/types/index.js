@@ -9,7 +9,7 @@ import {
   GraphQLInt,
   GraphQLFloat,
   GraphQLBoolean
-} from '/Users/mattway/repos/openclub-graphql/node_modules/graphql'
+} from 'graphql'
 import GraphQLDateTime from './date'
 
 export default {
