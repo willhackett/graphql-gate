@@ -8,31 +8,46 @@ import {
 import { mapObj, isObjectWithKeys } from './utils'
 
 /**
+ * Default config (in check order)
+ */
+const defaultConfig = [
+  {
+    name: validators,
+    args: true
+  },
+  {
+    name: permissions,
+    args: true,
+    read: true
+  }
+]
+
+/**
  * Primary entry function into twobyfour. Expects a twobyfour schema,
  * and converts it into a usable graphql schema.
  */
-const twobyfour = config => {
+const twobyfour = (schema, config = defaultConfig) => {
   // minimum expectation is queries
-  if(!config.queries || Object.keys(config.queries) === 0){
+  if(!schema.queries || Object.keys(schema.queries) === 0){
     throw new Error('twobyfour config must have a query object key set')
   }
 
-  const schema = {
+  const graphqlSchema = {
     query: new GraphQLObjectType({
       name: 'Query',
-      fields: mapObj(config.queries, parseRoot)
+      fields: mapObj(schema.queries, query => parseRoot(query, config))
     })
   }
 
   // parse mutations if available
-  if(config.mutations && Object.keys(config.mutations).length > 0){
-    schema.mutation = new GraphQLObjectType({
+  if(schema.mutations && Object.keys(schema.mutations).length > 0){
+    graphqlSchema.mutation = new GraphQLObjectType({
       name: 'Mutation',
-      fields: mapObj(config.mutations, parseRoot)
+      fields: mapObj(schema.mutations, mutation => parseRoot(mutation, config))
     })
   }
 
-  return new GraphQLSchema(schema)
+  return new GraphQLSchema(graphqlSchema)
 }
 
 // cache to hold the requested and parsed types
@@ -84,38 +99,51 @@ const parseField = config => {
 }
 
 /**
- * Validate a single value with an optional set of promise returning
+ * Run arbitrary functor against a single field
  * validation functions
  */
-const validateField = (key, value, validators = [], context) => {
-  if(Array.isArray(validators)){
-    // run the individual validators sequentially to ensure context caching works
-    return validators.reduce((p, v) => p.then(() => v(key, value, context)), Promise.resolve())
+const functorField = (key, value, functors = [], context, info) => {
+  if(Array.isArray(functors)){
+    // run the individual functors sequentially to ensure context caching works
+    return functors.reduce((p, v) => p.then(() => v(key, value, context, info)), Promise.resolve())
   }
   // single validator
-  return validators(key, value, context)
+  return functors(key, value, context, info)
 }
 
 /**
- * Validate an object set of key/values, and its associated schema
- * definitions (which contain optional validator functions)
+ * Run arbitrary functions over a key set, if matched to a 
+ * config with functions to run for that keyset
  */
-const validateFields = (values, defs, context) => {
-  // validate each arg in sequential order to utilise context caching correctly
+const functorFields = (name, values, defs, context, info) => {
+  // validate each value in sequential order to enforce chaining
   return Object.keys(values).reduce((p, key) =>
     p.then(() => {
       const val = values[key]
-      const itemValidated = validateField(key, values[key], defs[key].validators, context)
-      
-      // TODO: add support for array arg types
+      const functorRan = functorField(key, values[key], defs[key][name], context, info)
 
-      // deal with nested arg types
+      // TODO: add support for array child types
+
+      // deal with nested value types (TODO: this might belong in functorField())
       if(isObjectWithKeys(val)){
-        return itemValidated.then(() => validateFields(val, defs[key].fields))
+        return functorRan.then(() => functorFields(name, val, defs[key].fields, context, info))
       }
-      return itemValidated
-    }),
-  Promise.resolve())
+      return functorRan
+    })
+  ), Promise.resolve())
+}
+
+/**
+ * Run any available generators over a schema set, updating the relevant args
+ */
+const runGenerators = (values, defs, context, info) => {
+  return Object.keys(defs).reduce((p, key) =>
+    p.then(() => {
+      if(defs[key].generator){
+        values[key] = defs[key].generator(values, context, info)
+      }
+    })
+  ), Promise.resolve())
 }
 
 /**
@@ -123,13 +151,22 @@ const validateFields = (values, defs, context) => {
  * The type makes no difference to the parser, as details should be on
  * the config objects.
  */
-const parseRoot = config => ({
-  type: parseType(config.type),
-  args: mapObj(config.args || {}, parseField),
-  resolve: (root, params, context) => 
-    validateFields(params, config.args, context)
-    .then(() => config.resolve(root, params, context))
+const parseRoot = (proc, config = []) => ({
+  type: parseType(proc.type),
+  args: mapObj(proc.args || {}, parseField),
+  // go through the config list of functor types to run
+  resolve: (root, args, context, info) => config.reduce((a, b) => {
+    return (b.args ? functorFields(config.name, args, proc.args, context, info) : Promise.resolve())
+      .then(b.read ? functorFields(config.name, type, proc.type, context, info) : Promise.resolve())
+  }, Promise.resolve())
+  // run any available generators
+  .then(() => runGenerators(args, proc.args, context, info))
+  // run the actual resolver
+  .then(() => config.resolve(root, args, context, info))
 })
 
+export {
+  defaultConfig
+}
 
 export default twobyfour
