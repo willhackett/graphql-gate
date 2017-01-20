@@ -4,19 +4,19 @@ import {
   GraphQLInputObjectType,
   GraphQLNonNull,
   GraphQLList
-} from 'graphql'
-import { mapObj, isObjectWithKeys } from './utils'
+} from '/Users/mattway/repos/openclub-graphql/node_modules/graphql'
+import { mapObj, isObjectWithKeys, pChain } from './utils'
 
 /**
  * Default config (in check order)
  */
 const defaultConfig = [
   {
-    name: validators,
+    name: 'validators',
     args: true
   },
   {
-    name: permissions,
+    name: 'permissions',
     args: true,
     read: true
   }
@@ -60,6 +60,9 @@ const typeCache = {}
 const parseType = config => {
   const { name, fields } = config
 
+  // check for a scalar graphql type
+  if(config.graphql){ return config.graphql }
+
   // return cached type if available
   if(typeCache[name]) { return typeCache[name] }
 
@@ -74,27 +77,25 @@ const parseType = config => {
 }
 
 /**
- * Parse a list type field
- */
-const parseList = config => Object.assign({}, config, {
-  type: new GraphQLList(parseType(config))
-})
-
-/**
  * Parse an individual field of a type
  * It will recursively traverse the tree in the same manner
  * as graphql, but wrapping with extra requirements
  */
 const parseField = config => {
-  const { list, fields, required, type } = config
+  const { list, required, type } = config
 
-  if(list){
-    return parseList(type)
+  let childType = parseType(type)
+
+  if(required){
+    childType = new GraphQLNonNull(childType)
   }
 
-  const newType = fields ? parseType(config) : type.graphql
+  if(list){
+    childType = new GraphQLList(childType)
+  }
+
   return Object.assign({}, config, {
-    type: required ? new GraphQLNonNull(newType) : newType
+    type: childType
   })
 }
 
@@ -105,7 +106,7 @@ const parseField = config => {
 const functorField = (key, value, functors = [], context, info) => {
   if(Array.isArray(functors)){
     // run the individual functors sequentially to ensure context caching works
-    return functors.reduce((p, v) => p.then(() => v(key, value, context, info)), Promise.resolve())
+    return pChain(functors, v => v(key, value, context, info))
   }
   // single validator
   return functors(key, value, context, info)
@@ -117,33 +118,29 @@ const functorField = (key, value, functors = [], context, info) => {
  */
 const functorFields = (name, values, defs, context, info) => {
   // validate each value in sequential order to enforce chaining
-  return Object.keys(values).reduce((p, key) =>
-    p.then(() => {
-      const val = values[key]
-      const functorRan = functorField(key, values[key], defs[key][name], context, info)
+  return pChain(Object.keys(values), key => {
+    const val = values[key]
+    const functorRan = functorField(key, values[key], defs[key][name], context, info)
 
-      // TODO: add support for array child types
+    // TODO: add support for array child types
 
-      // deal with nested value types (TODO: this might belong in functorField())
-      if(isObjectWithKeys(val)){
-        return functorRan.then(() => functorFields(name, val, defs[key].fields, context, info))
-      }
-      return functorRan
-    }), 
-  Promise.resolve())
+    // deal with nested value types (TODO: this might belong in functorField())
+    if(isObjectWithKeys(val)){
+      return functorRan.then(() => functorFields(name, val, defs[key].fields, context, info))
+    }
+    return functorRan
+  })
 }
 
 /**
  * Run any available generators over a schema set, updating the relevant args
  */
 const runGenerators = (values, defs, context, info) => {
-  return Object.keys(defs).reduce((p, key) =>
-    p.then(() => {
-      if(defs[key].generator){
-        values[key] = defs[key].generator(values, context, info)
-      }
-    }),
-  Promise.resolve())
+  return pChain(Object.keys(defs), key => {
+    if(defs[key].generator){
+      values[key] = defs[key].generator(values, context, info)
+    }
+  })
 }
 
 /**
@@ -155,14 +152,19 @@ const parseRoot = (proc, config = []) => ({
   type: parseType(proc.type),
   args: mapObj(proc.args || {}, parseField),
   // go through the config list of functor types to run
-  resolve: (root, args, context, info) => config.reduce((a, b) => {
-    return (b.args ? functorFields(config.name, args, proc.args, context, info) : Promise.resolve())
-      .then(b.read ? functorFields(config.name, type, proc.type, context, info) : Promise.resolve())
-  }, Promise.resolve())
+  resolve: (root, args, context, info) => pChain(config, cat => 
+    (cat.args ? 
+      functorFields(cat.name, args, proc.args, context, info) : 
+        Promise.resolve())
+    // TODO: use info to pass desired keys to functorFields
+    /*.then(cat.read ? 
+      functorFields(cat.name, type, proc.type, context, info) : 
+        Promise.resolve())*/
+  )  
   // run any available generators
   .then(() => runGenerators(args, proc.args, context, info))
   // run the actual resolver
-  .then(() => config.resolve(root, args, context, info))
+  .then(() => proc.resolve(root, args, context, info))
 })
 
 export {

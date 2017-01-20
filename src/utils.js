@@ -18,7 +18,14 @@ const isObjectWithKeys = value => {
   return typeof value === 'object' && Object.keys(value).length > 0
 }
 
+/**
+ * Shorthand for chaining promise work sequentially
+ */
+const pChain = (arr, fn) => arr.reduce((a, b) =>
+  a.then(() => fn(b)), Promise.resolve())
+
 export {
   mapObj,
-  isObjectWithKeys
+  isObjectWithKeys,
+  pChain
 }

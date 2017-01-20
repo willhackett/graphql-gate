@@ -3,20 +3,20 @@
  * matching at some stage. twobyfour converts to the correct types when
  * being parsed by certain modules. It is only for scalar types currently
  */
-import { 
+import {
+  GraphQLID,
   GraphQLString,
   GraphQLInt,
   GraphQLFloat,
-  GraphQLBoolean,
-  GraphQLID
-} from 'graphql'
+  GraphQLBoolean
+} from '/Users/mattway/repos/openclub-graphql/node_modules/graphql'
 import GraphQLDateTime from './date'
 
 export default {
+  _id: { graphql: GraphQLID },
   _string: { graphql: GraphQLString },
   _int: { graphql: GraphQLInt },
   _float: { graphql: GraphQLFloat },
   _boolean: { graphql: GraphQLBoolean },
-  _id: { graphql: GraphQLID },
   _datetime: { graphql: GraphQLDateTime }
 }

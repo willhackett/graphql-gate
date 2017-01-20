@@ -35,7 +35,5 @@
     "webpack": "^1.14.0",
     "webpack-node-externals": "^1.5.4"
   },
-  "dependencies": {
-    "graphql": "^0.8.2"
-  }
+  "dependencies": {}
 }
