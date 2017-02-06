@@ -3,6 +3,7 @@
     "latest"
   ],
   "plugins": [
-    "transform-object-rest-spread"
+    "transform-object-rest-spread",
+    "babel-root-slash-import"
   ]
 }
