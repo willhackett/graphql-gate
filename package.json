@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "./node_modules/.bin/babel --presets latest -d lib/ src/",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "NODE_PATH=$NODE_PATH:$PWD nyc ./node_modules/.bin/mocha --compilers js:babel-core/register --reporter spec"
   },
   "repository": {
     "type": "git",
@@ -28,11 +28,15 @@
   "homepage": "https://github.com/OpenClubDev/twobyfour#readme",
   "devDependencies": {
     "babel-cli": "^6.18.0",
-    "babel-core": "^6.21.0",
+    "babel-core": "^6.22.1",
     "babel-loader": "^6.2.10",
-    "babel-plugin-transform-object-rest-spread": "^6.20.2",
-    "babel-preset-latest": "^6.16.0",
+    "babel-plugin-transform-object-rest-spread": "^6.22.0",
+    "babel-preset-latest": "^6.22.0",
     "babel-root-slash-import": "^1.1.0",
+    "chai": "^3.5.0",
+    "chai-as-promised": "^6.0.0",
+    "mocha": "^3.2.0",
+    "nyc": "^10.1.2",
     "webpack": "^1.14.0",
     "webpack-node-externals": "^1.5.4"
   },

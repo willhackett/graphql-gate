@@ -1,3 +1,5 @@
+import { promiseChain } from './utils'
+
 /**
  * This is a helper function that allows logical OR of promises within a
  * resolve promise chain. It returns a resolve fulfillment if ANY of the
