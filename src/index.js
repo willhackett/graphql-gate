@@ -1,10 +1,9 @@
 
-import twobyfour, { defaultConfig } from './twobyfour'
-import Types from './types'
+import twobyfour from './twobyfour'
+import { or } from './conditionals'
 
 export {
-  Types,
-  defaultConfig
+  or
 }
 
 export default twobyfour

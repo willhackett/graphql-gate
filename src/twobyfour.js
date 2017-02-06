@@ -1,174 +1,97 @@
-import { 
-  GraphQLSchema,
+import {
   GraphQLObjectType,
   GraphQLInputObjectType,
-  GraphQLNonNull,
-  GraphQLList
+  defaultFieldResolver
 } from 'graphql'
-import { mapObj, isObjectWithKeys, pChain } from './utils'
+import {
+  mapObject,
+  promiseChain,
+  hasKeys
+} from './utils'
 
 /**
- * Default config (in check order)
+ * Given a schema object, and a set of keys, build a promise chain
+ * that runs each function array for each found key, passing in the
+ * usual graphql resolve parameters
  */
-const defaultConfig = [
-  {
-    name: 'validators',
-    args: true
-  },
-  {
-    name: 'permissions',
-    args: true,
-    read: true
-  }
-]
+const keyChain = (schema, keys, root, args, context, info) =>
+  promiseChain(keys, key => schema[key] ?
+    promiseChain(schema[key], (fn, res) => fn(root, args, context, info, res)) :
+    Promise.resolve()
+  )
 
 /**
- * Primary entry function into twobyfour. Expects a twobyfour schema,
- * and converts it into a usable graphql schema.
+ * Given a schema object, and arrays of pre/post processing keys,
+ * build a single graphql resolve function that runs a pre chain
+ * before the primary resolver, and a post chain after. The post
+ * chain will not error the graphql call on rejection, and will only
+ * log a rejection result. This is because the resolver has already
+ * been successful and thus should return to the user
  */
-const twobyfour = (schema, config = defaultConfig) => {
-  // minimum expectation is queries
-  if(!schema.queries || Object.keys(schema.queries) === 0){
-    throw new Error('twobyfour config must have a query object key set')
-  }
+const buildResolve = (schema, _args, _pre, _post) => (root, args, context, info) => {
+  // set the primary resolve (default if not found)
+  const primaryResolver = schema.resolve || defaultFieldResolver
 
-  const graphqlSchema = {
-    query: new GraphQLObjectType({
-      name: 'Query',
-      fields: mapObj(schema.queries, query => parseRoot(query, config))
+  // process any argument chain first if available
+  // args can only be part of the pre chain
+  return (schema.args ?
+    promiseChain(Object.keys(schema.args),
+      arg => keyChain(schema.args[arg], _args, root, args, context, { ...info, arg })) :
+    Promise.resolve()
+  )
+  // run the pre chain if applicable
+  .then(() => keyChain(schema, _pre, root, args, context, info))
+  // run the primary resolver
+  .then(res => Promise.resolve(primaryResolver(root, args, context, info, res))
+    .then(finalResult => {
+      // run a post chain if applicable, but don't effect the final outcome
+      keyChain(schema, _post, root, args, context, info)
+      // return asynch from post chain
+      return finalResult
     })
+  )
+}
+
+/**
+ * Given a field object, build chained resolve if applicable
+ */
+const processField = (field, { args = [], pre = [], post = [] }) => {
+  // only apply the resolve builder to fields that need it
+  const result = {
+    ...field
   }
 
-  // parse mutations if available
-  if(schema.mutations && Object.keys(schema.mutations).length > 0){
-    graphqlSchema.mutation = new GraphQLObjectType({
-      name: 'Mutation',
-      fields: mapObj(schema.mutations, mutation => parseRoot(mutation, config))
-    })
+  // check if pre/post keys are found, or there are args and
+  // they contain pre/post keys
+  const argKeys = field.args ? Object.keys(field.args) : []
+  if(argKeys.some(arg => hasKeys(field.args[arg], args)) ||
+     hasKeys(field, pre) ||
+     hasKeys(field, post)){
+    // build the wrapping resolve chain
+    result.resolve = buildResolve(field, args, pre, post)
   }
 
-  return new GraphQLSchema(graphqlSchema)
-}
-
-// cache to hold the requested and parsed types
-const typeCache = {}
-
-/**
- * Parse a field set with a name, and whether or not
- * it is an input type
- */
-const parseType = config => {
-  const { name, fields } = config
-
-  // check for a scalar graphql type
-  if(config.graphql){ return config.graphql }
-
-  // return cached type if available
-  if(typeCache[name]) { return typeCache[name] }
-
-  const _config = Object.assign({}, config, {
-    fields: mapObj(fields, parseField)
-  })
-
-  // set cache and return the correct object
-  return typeCache[name] = config.input ? 
-    new GraphQLInputObjectType(_config) :
-    new GraphQLObjectType(_config)
+  return result
 }
 
 /**
- * Parse an individual field of a type
- * It will recursively traverse the tree in the same manner
- * as graphql, but wrapping with extra requirements
+ * Given a graphql type schema, return a graphql type, but with
+ * the schema modified to run a resolve pre/post chain if defined
  */
-const parseField = config => {
-  const { list, required, type } = config
-
-  let childType = parseType(type)
-
-  if(required){
-    childType = new GraphQLNonNull(childType)
+const twobyfour = (type, schema, config) => {
+  const output = {
+    ...schema
   }
 
-  if(list){
-    childType = new GraphQLList(childType)
+  // check if the fields object is a lazy loaded function,
+  // and if so, we need to perform lazy twobyfour
+  if(typeof schema.fields === "function"){
+    output.fields = () => mapObject(schema.fields(), field => processField(field, config))
+  }else{
+    output.fields = mapObject(schema.fields, field => processField(field, config))
   }
 
-  return Object.assign({}, config, {
-    type: childType
-  })
-}
-
-/**
- * Run arbitrary functor against a single field
- * validation functions
- */
-const functorField = (key, value, functors = [], context, info) => {
-  if(Array.isArray(functors)){
-    // run the individual functors sequentially to ensure context caching works
-    return pChain(functors, v => v(key, value, context, info))
-  }
-  // single validator
-  return functors(key, value, context, info)
-}
-
-/**
- * Run arbitrary functions over a key set, if matched to a 
- * config with functions to run for that keyset
- */
-const functorFields = (name, values, defs, context, info) => {
-  // validate each value in sequential order to enforce chaining
-  return pChain(Object.keys(values), key => {
-    const val = values[key]
-    const functorRan = functorField(key, values[key], defs[key][name], context, info)
-
-    // TODO: add support for array child types
-
-    // deal with nested value types (TODO: this might belong in functorField())
-    if(isObjectWithKeys(val)){
-      return functorRan.then(() => functorFields(name, val, defs[key].type.fields, context, info))
-    }
-    return functorRan
-  })
-}
-
-/**
- * Run any available generators over a schema set, updating the relevant args
- */
-const runGenerators = (values, defs, context, info) => {
-  return pChain(Object.keys(defs), key => {
-    if(defs[key].generator){
-      values[key] = defs[key].generator(values, context, info)
-    }
-  })
-}
-
-/**
- * Parse a config type, which could either be a query or a mutation.
- * The type makes no difference to the parser, as details should be on
- * the config objects.
- */
-const parseRoot = (proc, config = []) => ({
-  type: parseType(proc.type),
-  args: mapObj(proc.args || {}, parseField),
-  // go through the config list of functor types to run
-  resolve: (root, args, context, info) => pChain(config, cat => 
-    (cat.args ? 
-      functorFields(cat.name, args, proc.args, context, info) : 
-        Promise.resolve())
-    // TODO: use info to pass desired keys to functorFields
-    /*.then(cat.read ? 
-      functorFields(cat.name, type, proc.type, context, info) : 
-        Promise.resolve())*/
-  )  
-  // run any available generators
-  .then(() => runGenerators(args, proc.args, context, info))
-  // run the actual resolver
-  .then(() => proc.resolve(root, args, context, info))
-})
-
-export {
-  defaultConfig
+  return new type(output)
 }
 
 export default twobyfour
