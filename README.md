@@ -35,7 +35,7 @@ args: {
 In the example above, `isLength` and `matches` are both high order functions that return functions that match the regular graphql resolve pattern `resolve(root, args, context, info)`.
 *NOTE: Argument resolvers are slightly different in that they also include the current argument as the key `arg` on the `info` object parameter.*
 
-# Example
+## Example
 
 Imagine you had the following basic type/query in graphql
 
