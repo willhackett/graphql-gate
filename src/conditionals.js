@@ -20,7 +20,7 @@ const or = fn_arr => (root, args, context, info) => {
       // if an error is caught, count them up
       .catch(err => {
         errorCount++
-        if(errorCount === fn_arr.length){
+        if(errorCount === fn_arr.length || !Array.isArray(fn_arr)){
           reject(err)
         }
       })

@@ -24,7 +24,7 @@ const promiseChain = (_arr, fn) => {
  * Given an object and an array of keys, return true
  * if the object contains ANY of the keys
  */
-const hasKeys = (obj, keys) => keys.some(key => obj[key])
+const hasKeys = (obj = {}, keys = []) => keys.some(key => obj[key])
 
 export {
   mapObject,

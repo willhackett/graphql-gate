@@ -8,7 +8,7 @@ chai.should()
 describe('Test conditional OR promise chain manipulator', () => {
 
   const resolved = () => Promise.resolve()
-  const rejected = () => Promise.reject(new Error('test error'))
+  const rejected = () => Promise.reject(new Error('test rejection'))
 
   it('should fulfill a set of resolving promises', () =>
     or([resolved, resolved, resolved])().should.be.fulfilled
