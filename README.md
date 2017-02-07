@@ -3,7 +3,7 @@
 [![npm version](https://badge.fury.io/js/twobyfour.svg)](https://badge.fury.io/js/twobyfour)
 [![Build Status](https://travis-ci.org/OpenClubDev/twobyfour.svg?branch=master)](https://travis-ci.org/OpenClubDev/twobyfour?branch=master)
 
-Being agnostic of all business logic, graphql expects you to put everything inside the resolve functions. This means validation, permissions, analytics, business logic, etc. This was annoying, so... twobyfour is a graphql type wrapper that allows you to put resolve chains on any field, argument or type. They automatically wrap the primary resolver, so you can think of it a building and attaching arbitrary promise chains around your reoslve function. It will make a lot more sense with an example, so there is one just a small scroll away.
+Being agnostic of all business logic, graphql expects you to put everything inside the resolve functions. This means validation, permissions, analytics, business logic, etc. This was annoying, so... twobyfour is a graphql type wrapper that allows you to put resolve chains on any field, argument or type. They automatically wrap the primary resolver, so you can think of it as building and attaching arbitrary promise chains around your resolve functions. It will make a lot more sense with an example, so there is one just a small scroll away.
 
 ## Installation
 
@@ -19,25 +19,27 @@ twobyfour(graphqlType, schema, config)
 */
 ```
 **config**
+
 There is a sample config in the example below, but basically, the config is just an object that contains an array of key strings for three possible types:
     - `args:` promise chains that are run before all others for any given arguments.
     - `pre:` promise chains that are run before the primary resolve function.
     - `post:` promise chains that are run after the primary resolve function *(Note: these resolvers are run asynchronously to the return of the primary resolve. This was so that post resolvers don't delay any reply to a client).*
 
 **resolvers**
-Say you added the key `validators` to the `args` key for the twobyfour config. Then to add promise chains to be run on an arguments, simply add a single function or an array of functions to the key on an arguments:
+
+Say you added the key `validators` to the `args` key for the twobyfour config. To add promise chains to be run on an argument, simply add a single function or an array of functions to the key on that argument:
 ```
 args: {
   my_arg: {
     type: GraphQLString,
     validators: [isLength(1, 50), matches(/^[\w\d]+(?:-[\w\d]+)*$/)]
 ```
-In the example above, `isLength` and `matches` are both high order functions that return functions that match the regular graphql resolve pattern `resolve(root, args, context, info)`.
+In the example above, `isLength` and `matches` are both higher order functions that return functions that match the regular graphql resolve pattern `resolve(root, args, context, info)`.
 *NOTE: Argument resolvers are slightly different in that they also include the current argument as the key `arg` on the `info` object parameter.*
 
 ## Example
 
-Imagine you had the following basic type/query in graphql
+Imagine you had the following basic type/query in graphql:
 
 ```
 const myType = new GraphQLObjectType({
@@ -93,6 +95,7 @@ const schema = new GraphQLSchema({
 ```
 
 This might look a little magic, but here is what is happening.
+
 1. Define a twobyfour config, that tells twobyfour which keys to look for on arguments or fields.
 ```
 const config = {
