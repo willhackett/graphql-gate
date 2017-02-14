@@ -37,4 +37,9 @@ describe('Test conditional OR promise chain manipulator', () => {
   it('should reject a single rejecting promise (not in array)', () =>
     or(rejected)().should.be.rejected
   )
+
+  it('should fullfil for functions that return nothing (i.e. default resolve)', () => {
+    const func = () => {}
+    return or([func, func])().should.be.fulfilled
+  })
 })

@@ -11,7 +11,7 @@ const or = fn_arr => (root, args, context, info) => {
     // run each function in a chain
     // resolving the entire or if any resolve (realy exiting if so)
     promiseChain(fn_arr, fn =>
-      fn(root, args, context, info).then(() => {
+      Promise.resolve(fn(root, args, context, info)).then(() => {
         // resolve the entire or as a promise resolved
         resolve()
         // reject this promise so the chain early exits
