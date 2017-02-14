@@ -1,6 +1,6 @@
 {
   "name": "twobyfour",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "graphql wrapper for making validation, generation and permissions easier",
   "main": "lib/index.js",
   "scripts": {
