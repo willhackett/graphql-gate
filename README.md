@@ -1,4 +1,5 @@
 # twobyfour
+![twobyfour](https://openclubdev.github.io/openclub-assets/images/logo/twobyfour-logo.png)
 
 [![npm version](https://badge.fury.io/js/twobyfour.svg)](https://badge.fury.io/js/twobyfour)
 [![Build Status](https://travis-ci.org/OpenClubDev/twobyfour.svg?branch=master)](https://travis-ci.org/OpenClubDev/twobyfour?branch=master)
