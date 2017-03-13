@@ -70,6 +70,19 @@ twobyfour(gqSchema, {
   post: ['analytics']
 })
 
+graphql(gqSchema, `
+  query {
+    testQuery(firstArg: "somevalue"){
+      testField
+    }
+  }
+`).then(result => {
+  console.log(result)
+}).catch(err => {
+  console.log('-- got error --')
+  console.log(err)
+})
+
 export {
   gqSchema
 }

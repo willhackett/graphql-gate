@@ -90,11 +90,11 @@ describe('Test twobyfour primary graphql wrapping', () => {
           }
         }
       })
-      sp.callCount.should.equal(5)
+      sp.callCount.should.equal(4)
       sp.firstCall.should.have.been.calledWith(1)
-      sp.secondCall.should.have.been.calledWith(2)
-      sp.thirdCall.should.have.been.calledWith(3)
-      sp.lastCall.should.have.been.calledWith(5)
+      sp.secondCall.should.have.been.calledWith(3)
+      sp.thirdCall.should.have.been.calledWith(5)
+      sp.lastCall.should.have.been.calledWith(4)
       sp.reset()
     })
   })

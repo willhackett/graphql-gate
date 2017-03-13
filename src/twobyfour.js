@@ -65,12 +65,15 @@ const buildArgTree = (args, keys) => {
 
 const runArgTree = (tree, root, args, context, info) => {
   return Object.keys(tree).reduce((p, argName) => {
-    const arg = tree[argName]
-    if(arg.functions){
-      p = p.then(promiseChain(arg.functions, fn => fn(root, args, context, { ...info, argName })))
-    }
-    if(arg.children){
-      p.then(runArgTree(arg.children, root, args[argName], context, info))
+    // only process arg if it was provided to the query
+    if(args[argName]){
+      const arg = tree[argName]
+      if(arg.functions){
+        p = p.then(promiseChain(arg.functions, fn => fn(root, args, context, { ...info, argName })))
+      }
+      if(arg.children){
+        p.then(runArgTree(arg.children, root, args[argName], context, info))
+      }
     }
   }, Promise.resolve())
 }
@@ -98,7 +101,7 @@ const processField = (name, field, parsedField, config) => {
     debug(`Processing keys found for field: ${name}`)
     const primaryResolver = field.resolve || defaultFieldResolver
     parsedField.resolve = (root, args, context, info) => {
-      Promise.resolve()
+      return Promise.resolve()
         .then(() => argChain ? argChain(root, args, context, info) : null)
         .then(() => preChain ? preChain(root, args, context, info) : null)
         .then(() => primaryResolver(root, args, context, info))
