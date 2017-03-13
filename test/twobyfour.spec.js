@@ -5,6 +5,7 @@ import sinon from 'sinon'
 import {
   graphql,
   GraphQLObjectType,
+  GraphQLInputObjectType,
   GraphQLString,
   GraphQLSchema
 } from 'graphql'
@@ -52,6 +53,18 @@ describe('Test twobyfour primary graphql wrapping', () => {
         firstArg: {
           type: GraphQLString,
           validators: func(1)
+        },
+        secondArgs: {
+          type: twobyfour(GraphQLInputObjectType, {
+            name: 'somecustom',
+            description: 'custom nested type',
+            fields: {
+              afield: {
+                type: GraphQLString,
+                validators: func(5)
+              }
+            }
+          }, testConfig)
         }
       },
       analytics: func(3),
@@ -81,11 +94,11 @@ describe('Test twobyfour primary graphql wrapping', () => {
           }
         }
       })
-      sp.callCount.should.equal(4)
+      sp.callCount.should.equal(5)
       sp.firstCall.should.have.been.calledWith(1)
-      sp.secondCall.should.have.been.calledWith(2)
-      sp.thirdCall.should.have.been.calledWith(3)
-      sp.lastCall.should.have.been.calledWith(4)
+      sp.secondCall.should.have.been.calledWith(5)
+      sp.thirdCall.should.have.been.calledWith(2)
+      sp.lastCall.should.have.been.calledWith(3)
       sp.reset()
     })
   })
