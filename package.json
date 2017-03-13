@@ -5,7 +5,8 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "./node_modules/.bin/babel --presets latest -d lib/ src/",
-    "test": "NODE_PATH=$NODE_PATH:$PWD nyc ./node_modules/.bin/mocha --compilers js:babel-core/register --reporter spec"
+    "test": "NODE_PATH=$NODE_PATH:$PWD nyc ./node_modules/.bin/mocha --compilers js:babel-core/register --reporter spec",
+    "test:debug": "NODE_PATH=$NODE_PATH:$PWD nyc ./node_modules/.bin/mocha --inspect --debug-brk --compilers js:babel-core/register --reporter spec"
   },
   "repository": {
     "type": "git",
@@ -44,6 +45,7 @@
     "webpack-node-externals": "^1.5.4"
   },
   "dependencies": {
+    "debug": "^2.6.2",
     "graphql": "^0.9.1"
   }
 }

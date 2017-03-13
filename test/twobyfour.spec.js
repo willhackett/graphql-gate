@@ -17,68 +17,64 @@ chai.should()
 
 describe('Test twobyfour primary graphql wrapping', () => {
 
-  const testConfig = {
-    args: ['validators'],
-    pre: ['permissions'],
-    post: ['analytics']
-  }
+  const sp = sinon.spy()
+  const func = val => () => sp(val)
 
-  const schema = {
-    name: 'test',
+  const testType = new GraphQLObjectType({
+    name: 'testType',
     description: 'test description',
     fields: {
       testField: {
-        type: GraphQLString
+        type: GraphQLString,
+        permissions: func(4)
       }
     }
+  })
+
+  const query = {
+    name: 'testQuery',
+    description: 'test query',
+    type: testType,
+    permissions: func(3),
+    args: {
+      firstArg: {
+        type: GraphQLString,
+        validators: func(1)
+      },
+      secondArgs: {
+        type: new GraphQLInputObjectType({
+          name: 'somecustom',
+          description: 'custom nested type',
+          fields: {
+            afield: {
+              type: GraphQLString,
+              validators: func(2)
+            }
+          }
+        })
+      }
+    },
+    analytics: func(5),
+    resolve: (root, args) => ({ testField: args.firstArg })
   }
 
-  it('should parse a basic query type', () => {
-    const type = twobyfour(GraphQLObjectType, schema, testConfig)
-    type.getFields().should.have.all.keys('testField')
+  const gqSchema = new GraphQLSchema({
+    query: new GraphQLObjectType({
+      name: 'Query',
+      fields: {
+        testQuery: query
+      }
+    })
+  })
+
+  // run twobyfour over the schema
+  twobyfour(gqSchema, {
+    args: ['validators'],
+    pre: ['permissions'],
+    post: ['analytics']
   })
 
   it('should run all chains for a test query', () => {
-    const sp = sinon.spy()
-    const func = val => () => sp(val)
-    schema.fields.testField.permissions = func(4)
-    const type = twobyfour(GraphQLObjectType, schema, testConfig)
-
-    const query = {
-      name: 'testQuery',
-      description: 'test query',
-      type: type,
-      permissions: func(2),
-      args: {
-        firstArg: {
-          type: GraphQLString,
-          validators: func(1)
-        },
-        secondArgs: {
-          type: twobyfour(GraphQLInputObjectType, {
-            name: 'somecustom',
-            description: 'custom nested type',
-            fields: {
-              afield: {
-                type: GraphQLString,
-                validators: func(5)
-              }
-            }
-          }, testConfig)
-        }
-      },
-      analytics: func(3),
-      resolve: (root, args) => ({ testField: args.firstArg })
-    }
-
-    const gqSchema = new GraphQLSchema({
-      query: twobyfour(GraphQLObjectType, {
-        name: 'Query',
-        fields: {
-          testQuery: query
-        }
-      }, testConfig)
-    })
 
     return graphql(gqSchema, `
       query {
@@ -96,9 +92,9 @@ describe('Test twobyfour primary graphql wrapping', () => {
       })
       sp.callCount.should.equal(5)
       sp.firstCall.should.have.been.calledWith(1)
-      sp.secondCall.should.have.been.calledWith(5)
-      sp.thirdCall.should.have.been.calledWith(2)
-      sp.lastCall.should.have.been.calledWith(3)
+      sp.secondCall.should.have.been.calledWith(2)
+      sp.thirdCall.should.have.been.calledWith(3)
+      sp.lastCall.should.have.been.calledWith(5)
       sp.reset()
     })
   })

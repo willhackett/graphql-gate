@@ -26,8 +26,15 @@ const promiseChain = (_arr, fn) => {
  */
 const hasKeys = (obj = {}, keys = []) => keys.some(key => obj[key])
 
+/**
+ * Given an object and an array of keys, return all the
+ * keys in the array which exist on the object
+ */
+const getMatchingKeys = (obj = {}, keys = []) => keys.filter(key => obj[key])
+
 export {
   mapObject,
   promiseChain,
-  hasKeys
+  hasKeys,
+  getMatchingKeys
 }
