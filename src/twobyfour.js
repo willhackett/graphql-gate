@@ -69,7 +69,7 @@ const runArgTree = (tree, root, args, context, info) => {
     if(args[argName]){
       const arg = tree[argName]
       if(arg.functions){
-        p = p.then(promiseChain(arg.functions, fn => fn(root, args, context, { ...info, argName })))
+        p = p.then(promiseChain(arg.functions, fn => fn(root, args, context, { ...info, arg: argName })))
       }
       if(arg.children){
         p.then(runArgTree(arg.children, root, args[argName], context, info))
