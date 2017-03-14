@@ -19,6 +19,10 @@ describe('Test twobyfour primary graphql wrapping', () => {
 
   const sp = sinon.spy()
   const func = val => () => sp(val)
+  const failure = val => () => {
+    sp(val)
+    return Promise.reject(new Error('some test error'))
+  }
 
   const testType = new GraphQLObjectType({
     name: 'testType',

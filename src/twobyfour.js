@@ -69,10 +69,10 @@ const runArgTree = (tree, root, args, context, info) => {
     if(args[argName]){
       const arg = tree[argName]
       if(arg.functions){
-        p = p.then(promiseChain(arg.functions, fn => fn(root, args, context, { ...info, arg: argName })))
+        p = p.then(res => promiseChain(arg.functions, fn => fn(root, args, context, { ...info, arg: argName })))
       }
       if(arg.children){
-        p = p.then(runArgTree(arg.children, root, args[argName], context, info))
+        p = p.then(res => runArgTree(arg.children, root, args[argName], context, info))
       }
     }
     return p
@@ -107,11 +107,16 @@ const processField = (name, field, parsedField, config) => {
         .then(() => preChain ? preChain(root, args, context, info) : null)
         .then(() => primaryResolver(root, args, context, info))
         .then(primaryResult => {
+          console.log('shouldnt get here')
           // run the post chain async to the reply
           if(postChain) { postChain(root, args, context, info) }
 
           return primaryResult
         })
+        /*.catch(err => {
+          console.log('handled error here')
+          console.log(err)
+        })*/
     }
   }
 
