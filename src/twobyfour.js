@@ -113,10 +113,6 @@ const processField = (name, field, parsedField, config) => {
 
           return primaryResult
         })
-        /*.catch(err => {
-          console.log('handled error here')
-          console.log(err)
-        })*/
     }
   }
 
