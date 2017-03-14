@@ -39,7 +39,8 @@ describe('Test twobyfour primary graphql wrapping', () => {
     args: {
       firstArg: {
         type: GraphQLString,
-        validators: func(1)
+        validators: [func(1), func(6)],
+        other: func(7)
       },
       secondArgs: {
         type: new GraphQLInputObjectType({
@@ -69,7 +70,7 @@ describe('Test twobyfour primary graphql wrapping', () => {
 
   // run twobyfour over the schema
   twobyfour(gqSchema, {
-    args: ['validators'],
+    args: ['validators', 'other'],
     pre: ['permissions'],
     post: ['analytics']
   })
@@ -90,10 +91,10 @@ describe('Test twobyfour primary graphql wrapping', () => {
           }
         }
       })
-      sp.callCount.should.equal(4)
+      sp.callCount.should.equal(6)
       sp.firstCall.should.have.been.calledWith(1)
-      sp.secondCall.should.have.been.calledWith(3)
-      sp.thirdCall.should.have.been.calledWith(5)
+      sp.secondCall.should.have.been.calledWith(6)
+      sp.thirdCall.should.have.been.calledWith(7)
       sp.lastCall.should.have.been.calledWith(4)
       sp.reset()
     })
