@@ -107,7 +107,6 @@ const processField = (name, field, parsedField, config) => {
         .then(() => preChain ? preChain(root, args, context, info) : null)
         .then(() => primaryResolver(root, args, context, info))
         .then(primaryResult => {
-          console.log('shouldnt get here')
           // run the post chain async to the reply
           if(postChain) { postChain(root, args, context, info) }
 
