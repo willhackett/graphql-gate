@@ -7,6 +7,7 @@ import {
   getMatchingKeys
 } from './utils'
 import debugCreator from 'debug'
+import util from 'util'
 
 const debug = debugCreator('twobyfour')
 
@@ -47,7 +48,12 @@ const buildArgTree = (args, keys) => {
     // create a functions key if applicable
     const functions = getAssociatedArgFunctions(arg, keys)
     // create a children key if applicable
-    const children = buildArgTree(arg.type._fields, keys)
+    let children
+    if(arg.type._fields){
+      children = buildArgTree(arg.type._fields, keys)
+    }else if(arg.type.ofType){
+      children = buildArgTree(arg.type.ofType._fields, keys)
+    }
 
     if(functions.length > 0 || children){
       const key = {}
@@ -64,6 +70,7 @@ const buildArgTree = (args, keys) => {
 }
 
 const runArgTree = (tree, root, args, context, info) => {
+  debug(util.inspect(tree))
   return Object.keys(tree).reduce((p, argName) => {
     // only process arg if it was provided to the query
     if(args[argName]){
@@ -71,8 +78,17 @@ const runArgTree = (tree, root, args, context, info) => {
       if(arg.functions){
         p = p.then(res => promiseChain(arg.functions, fn => fn(root, args, context, { ...info, arg: argName })))
       }
+
       if(arg.children){
-        p = p.then(res => runArgTree(arg.children, root, args[argName], context, info))
+        // if the arg is an array (for a list), then we need to run the func chain on
+        // every item in the list
+        if(Array.isArray(args[argName])){
+          args[argName].forEach(a => {
+            p = p.then(res => runArgTree(arg.children, root, a, context, info))
+          })
+        }else{
+          p = p.then(res => runArgTree(arg.children, root, args[argName], context, info))
+        }
       }
     }
     return p

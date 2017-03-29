@@ -7,7 +7,8 @@ import {
   GraphQLObjectType,
   GraphQLInputObjectType,
   GraphQLString,
-  GraphQLSchema
+  GraphQLSchema,
+  GraphQLList
 } from 'graphql'
 import twobyfour from '/src/twobyfour'
 
@@ -31,6 +32,17 @@ describe('Test twobyfour primary graphql wrapping', () => {
       testField: {
         type: GraphQLString,
         permissions: func(4)
+      },
+      testArray: {
+        type: new GraphQLList(new GraphQLObjectType({
+          name: 'arrayItemType',
+          description: 'array read type description',
+          fields: {
+            item: {
+              type: GraphQLString
+            }
+          }
+        }))
       }
     }
   })
@@ -57,10 +69,24 @@ describe('Test twobyfour primary graphql wrapping', () => {
             }
           }
         })
+      },
+      thirdArgs: {
+        type: new GraphQLList(new GraphQLInputObjectType({
+          name: 'customlistitem',
+          fields: {
+            item: {
+              type: GraphQLString,
+              other: func(8)
+            }
+          }
+        }))
       }
     },
     analytics: func(5),
-    resolve: (root, args) => ({ testField: args.firstArg })
+    resolve: (root, args) => ({
+      testField: args.firstArg,
+      testArray: args.thirdArgs
+    })
   }
 
   const gqSchema = new GraphQLSchema({
@@ -83,19 +109,33 @@ describe('Test twobyfour primary graphql wrapping', () => {
 
     return graphql(gqSchema, `
       query {
-        testQuery(firstArg: "somevalue"){
-          testField
+        testQuery(firstArg: "somevalue", thirdArgs: [
+          {
+            item: "anitem"
+          }
+          {
+            item: "anotheritem"
+          }
+        ]){
+          testField,
+          testArray{
+            item
+          }
         }
       }
     `).then(result => {
       result.should.deep.equal({
         data: {
           testQuery: {
-            testField: 'somevalue'
+            testField: 'somevalue',
+            testArray: [
+              { item: 'anitem' },
+              { item: 'anotheritem' }
+            ]
           }
         }
       })
-      sp.callCount.should.equal(6)
+      sp.callCount.should.equal(8)
       sp.firstCall.should.have.been.calledWith(1)
       sp.secondCall.should.have.been.calledWith(6)
       sp.thirdCall.should.have.been.calledWith(7)
