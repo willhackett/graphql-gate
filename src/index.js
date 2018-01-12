@@ -1,9 +1,9 @@
 
-import twobyfour from './twobyfour'
+import gate from './gate'
 import { or } from './conditionals'
 
 export {
   or
 }
 
-export default twobyfour
+export default gate

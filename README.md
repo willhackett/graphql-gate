@@ -1,6 +1,6 @@
-![twobyfour](https://openclubdev.github.io/openclub-assets/images/logo/twobyfour-logo.png)
+![graphql-gate](https://www.willhackett.com/img/gate_logo.png)
 
-[![npm version](https://badge.fury.io/js/twobyfour.svg)](https://badge.fury.io/js/twobyfour)
+[![npm version](https://badge.fury.io/js/graphql-gate.svg)](https://badge.fury.io/js/graphql-gate)
 [![Build Status](https://travis-ci.org/OpenClubDev/twobyfour.svg?branch=master)](https://travis-ci.org/OpenClubDev/twobyfour?branch=master)
 
 Being agnostic of all business logic, graphql expects you to put everything inside the resolve functions. This means validation, permissions, analytics, business logic, etc. We wanted to put these things right next to the appropriate fields, so they are easier to understand and act on. So twobyfour is a graphql schema wrapper that allows you to decorate any field with functions that will be wrapped around your primary resolve (including managing arguments). It automatically walks the schema tree, looking for the appropriate decorators and updates the resolve functions automagically. There is an example below.

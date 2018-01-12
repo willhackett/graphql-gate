@@ -9,7 +9,7 @@ import {
 import debugCreator from 'debug'
 import util from 'util'
 
-const debug = debugCreator('twobyfour')
+const debug = debugCreator('graphql-gate')
 
 // cache used so that we don't rebuild the same type twice
 let typeCache = {}
@@ -150,7 +150,7 @@ const processType = (type, config) => {
   Object.keys(fields).forEach(field => processField(field, fields[field], parsedFields[field], config))
 }
 
-const twobyfour = (schema, config) => {
+const gate = (schema, config) => {
   typeCache = {}
   // process both the query and mutation type if they exist
   processType(schema._queryType, config)
@@ -160,4 +160,4 @@ const twobyfour = (schema, config) => {
   return schema
 }
 
-export default twobyfour
+export default gate

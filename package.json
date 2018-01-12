@@ -1,6 +1,6 @@
 {
-  "name": "twobyfour",
-  "version": "0.0.16",
+  "name": "graphql-gate",
+  "version": "2.0.0",
   "description": "graphql wrapper for making validation, generation and permissions easier",
   "main": "lib/index.js",
   "scripts": {
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/OpenClubDev/twobyfour.git"
+    "url": "git+https://github.com/willhackett/graphql-gate.git"
   },
   "keywords": [
     "graphql",
@@ -21,12 +21,12 @@
     "dynamodb",
     "lambda"
   ],
-  "author": "Matt Way",
-  "license": "GPL-3.0",
+  "author": "Will Hackett",
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/OpenClubDev/twobyfour/issues"
+    "url": "https://github.com/willhackett/graphql-gate/issues"
   },
-  "homepage": "https://github.com/OpenClubDev/twobyfour#readme",
+  "homepage": "https://github.com/willhackett/graphql-gate#readme",
   "devDependencies": {
     "babel-cli": "^6.22.2",
     "babel-core": "^6.22.1",
@@ -40,12 +40,10 @@
     "mocha-sinon": "^1.1.6",
     "nyc": "^10.1.2",
     "sinon": "^1.17.7",
-    "sinon-chai": "^2.8.0",
-    "webpack": "^1.14.0",
-    "webpack-node-externals": "^1.5.4"
+    "sinon-chai": "^2.8.0"
   },
   "dependencies": {
-    "debug": "^2.6.2",
-    "graphql": "^0.9.1"
+    "debug": "^3.1.0",
+    "graphql": "^0.12.3"
   }
 }
