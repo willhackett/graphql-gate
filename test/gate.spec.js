@@ -10,13 +10,13 @@ import {
   GraphQLSchema,
   GraphQLList
 } from 'graphql'
-import twobyfour from '/src/twobyfour'
+import gate from '/src/gate'
 
 chai.use(sinonChai)
 chai.use(chaiAsPromised)
 chai.should()
 
-describe('Test twobyfour primary graphql wrapping', () => {
+describe('Test gate primary graphql wrapping', () => {
 
   const sp = sinon.spy()
   const func = val => () => sp(val)
@@ -98,8 +98,8 @@ describe('Test twobyfour primary graphql wrapping', () => {
     })
   })
 
-  // run twobyfour over the schema
-  twobyfour(gqSchema, {
+  // run gate over the schema
+  gate(gqSchema, {
     args: ['validators', 'other'],
     pre: ['permissions'],
     post: ['analytics']
