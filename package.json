@@ -1,6 +1,6 @@
 {
   "name": "graphql-gate",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "graphql wrapper for making validation, generation and permissions easier",
   "main": "lib/index.js",
   "scripts": {
